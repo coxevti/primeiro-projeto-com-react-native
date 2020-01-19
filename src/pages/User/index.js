@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import {ActivityIndicator} from 'react-native';
 import PropTypes from 'prop-types';
 
 import api from '../../services/api';
@@ -10,6 +9,7 @@ import {
     Avatar,
     Name,
     Bio,
+    Loading,
     Starts,
     Starred,
     OwnerAvatar,
@@ -28,16 +28,35 @@ export default class User extends Component {
         this.state = {
             starts: [],
             loading: false,
+            page: 1,
         };
     }
 
     async componentDidMount() {
-        this.setState({loading: true});
+        this.load();
+    }
+
+    load = async (page = 1) => {
+        const {starts} = this.state;
         const {navigation} = this.props;
         const user = navigation.getParam('user');
-        const response = await api.get(`/users/${user.login}/starred`);
-        this.setState({starts: response.data, loading: false});
-    }
+        const response = await api.get(`/users/${user.login}/starred`, {
+            params: {
+                page,
+            },
+        });
+        this.setState({
+            starts: page >= 2 ? [...starts, ...response.data] : response.data,
+            page,
+            loading: false,
+        });
+    };
+
+    loadMore = async () => {
+        const {page} = this.state;
+        const nextPage = page + 1;
+        this.load(nextPage);
+    };
 
     render() {
         const {navigation} = this.props;
@@ -51,10 +70,12 @@ export default class User extends Component {
                     <Bio>{user.bio}</Bio>
                 </Header>
                 {loading ? (
-                    <ActivityIndicator style={{marginTop: 15}} />
+                    <Loading />
                 ) : (
                     <Starts
                         data={starts}
+                        onEndReachedThreshold={0.2}
+                        onEndReached={this.loadMore}
                         keyExtractor={start => String(start.id)}
                         renderItem={({item}) => (
                             <Starred>
