@@ -27,8 +27,9 @@ export default class User extends Component {
         super(props);
         this.state = {
             starts: [],
-            loading: false,
+            loading: true,
             page: 1,
+            refreshing: false,
         };
     }
 
@@ -48,6 +49,7 @@ export default class User extends Component {
         this.setState({
             starts: page >= 2 ? [...starts, ...response.data] : response.data,
             page,
+            refreshing: false,
             loading: false,
         });
     };
@@ -58,10 +60,14 @@ export default class User extends Component {
         this.load(nextPage);
     };
 
+    refreshList = () => {
+        this.setState({refreshing: true, starts: []}, this.load);
+    };
+
     render() {
         const {navigation} = this.props;
         const user = navigation.getParam('user');
-        const {starts, loading} = this.state;
+        const {starts, loading, refreshing} = this.state;
         return (
             <Container>
                 <Header>
@@ -74,7 +80,9 @@ export default class User extends Component {
                 ) : (
                     <Starts
                         data={starts}
-                        onEndReachedThreshold={0.2}
+                        onRefresh={this.refreshList}
+                        refreshing={refreshing}
+                        onEndReachedThreshold={0.5}
                         onEndReached={this.loadMore}
                         keyExtractor={start => String(start.id)}
                         renderItem={({item}) => (
