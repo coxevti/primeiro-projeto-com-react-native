@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import {ActivityIndicator} from 'react-native';
 import PropTypes from 'prop-types';
 
 import api from '../../services/api';
@@ -26,20 +27,22 @@ export default class User extends Component {
         super(props);
         this.state = {
             starts: [],
+            loading: false,
         };
     }
 
     async componentDidMount() {
+        this.setState({loading: true});
         const {navigation} = this.props;
         const user = navigation.getParam('user');
         const response = await api.get(`/users/${user.login}/starred`);
-        this.setState({starts: response.data});
+        this.setState({starts: response.data, loading: false});
     }
 
     render() {
         const {navigation} = this.props;
         const user = navigation.getParam('user');
-        const {starts} = this.state;
+        const {starts, loading} = this.state;
         return (
             <Container>
                 <Header>
@@ -47,21 +50,25 @@ export default class User extends Component {
                     <Name>{user.name}</Name>
                     <Bio>{user.bio}</Bio>
                 </Header>
-                <Starts
-                    data={starts}
-                    keyExtractor={start => String(start.id)}
-                    renderItem={({item}) => (
-                        <Starred>
-                            <OwnerAvatar
-                                source={{uri: item.owner.avatar_url}}
-                            />
-                            <Info>
-                                <Title>{item.name}</Title>
-                                <Author>{item.owner.login}</Author>
-                            </Info>
-                        </Starred>
-                    )}
-                />
+                {loading ? (
+                    <ActivityIndicator style={{marginTop: 15}} />
+                ) : (
+                    <Starts
+                        data={starts}
+                        keyExtractor={start => String(start.id)}
+                        renderItem={({item}) => (
+                            <Starred>
+                                <OwnerAvatar
+                                    source={{uri: item.owner.avatar_url}}
+                                />
+                                <Info>
+                                    <Title>{item.name}</Title>
+                                    <Author>{item.owner.login}</Author>
+                                </Info>
+                            </Starred>
+                        )}
+                    />
+                )}
             </Container>
         );
     }
