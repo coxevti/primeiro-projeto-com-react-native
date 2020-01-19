@@ -51,7 +51,7 @@ export const Starts = styled.FlatList.attrs({
     margin-top: 20px;
 `;
 
-export const Starred = styled.View`
+export const Starred = styled.TouchableOpacity`
     background: #d5d5d5;
     border-radius: 4px;
     padding: 10px 15px;
